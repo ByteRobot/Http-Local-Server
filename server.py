@@ -399,7 +399,7 @@ class QRDialog(QDialog):
     def __init__(self, url: str, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Scan to Connect")
-        self.setFixedSize(320, 380)
+        self.setFixedSize(520, 400)
         self.setStyleSheet(f"background: {C['surface']}; color: {C['text']};")
 
         layout = QVBoxLayout(self)
@@ -419,7 +419,7 @@ class QRDialog(QDialog):
         pix.loadFromData(buf.read(), "PNG")
 
         qr_lbl = QLabel()
-        qr_lbl.setPixmap(pix.scaled(240, 240, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        qr_lbl.setPixmap(pix.scaled(420, 360, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         qr_lbl.setAlignment(Qt.AlignCenter)
         qr_lbl.setStyleSheet("background: white; border-radius: 8px; padding: 8px;")
         layout.addWidget(qr_lbl)
@@ -1252,6 +1252,6 @@ def main():
     w.show()
     sys.exit(app.exec_())
 
-
+##
 if __name__ == "__main__":
     main()
