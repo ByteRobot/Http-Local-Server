@@ -53,31 +53,24 @@ try:
 except ImportError:
     HAS_QR = False
 
-# ─────────────────────────────────────────────────────────────
-# PALETTE (Light green, high-contrast, developer-tool aesthetic)
-# ─────────────────────────────────────────────────────────────
 C = {
-    "bg":          "#F5FBF6",   # page background (very light green tint)
-    "surface":     "#FFFFFF",   # card / panel background
-    "surface2":    "#EAF7EE",   # secondary surface (sidebar)
-    "border":      "#D7ECDD",   # borders
-    "border_focus":"#2FB36C",   # focused input border
-
-    "accent":      "#2FB36C",   # primary action (light green)
-    "accent_dark": "#239456",   # hover (darker green)
-    "accent_soft": "#E1F7E9",   # soft accent tint
-    "accent_light":"#8FE3B0",   # gradient highlight
-
-    "danger":      "#E84545",   # stop / error
+    "bg":          "#F5FBF6",
+    "surface":     "#FFFFFF",
+    "surface2":    "#EAF7EE",
+    "border":      "#D7ECDD",
+    "border_focus":"#2FB36C",
+    "accent":      "#2FB36C",
+    "accent_dark": "#239456",
+    "accent_soft": "#E1F7E9",
+    "accent_light":"#8FE3B0",
+    "danger":      "#E84545",
     "danger_dark": "#C43030",
-    "warn":        "#F59D00",   # warning
-    "success":     "#1FA862",   # running indicator
-
-    "text":        "#1A271F",   # primary text
-    "text_sec":    "#5C7768",   # secondary / muted text
-    "text_inv":    "#FFFFFF",   # on dark / accent backgrounds
-
-    "log_bg":      "#102318",   # log panel (dark, for contrast with mono text)
+    "warn":        "#F59D00",
+    "success":     "#1FA862",
+    "text":        "#1A271F",
+    "text_sec":    "#5C7768",
+    "text_inv":    "#FFFFFF",
+    "log_bg":      "#102318",
     "log_text":    "#CFEFD9",
     "log_ts":      "#6FA084",
     "log_error":   "#FF6B6B",
@@ -85,9 +78,6 @@ C = {
 }
 
 
-# ─────────────────────────────────────────────────────────────
-# Network helpers
-# ─────────────────────────────────────────────────────────────
 def get_primary_ip() -> str:
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -114,7 +104,7 @@ def get_all_ips() -> list:
         hostname = socket.gethostname()
         for info in socket.getaddrinfo(hostname, None):
             ip = info[4][0]
-            if ":" not in ip:  # skip IPv6
+            if ":" not in ip:
                 ips.add(ip)
     except Exception:
         pass
@@ -123,9 +113,6 @@ def get_all_ips() -> list:
     return sorted(ips)
 
 
-# ─────────────────────────────────────────────────────────────
-# Stats & cross-thread signals
-# ─────────────────────────────────────────────────────────────
 @dataclass
 class ServerStats:
     start_time: float = 0.0
@@ -135,16 +122,13 @@ class ServerStats:
 
 
 class _Emitter(QObject):
-    log_signal   = pyqtSignal(str, str)   # (message, level)  level: info|warn|error
-    stats_signal = pyqtSignal(int, int)   # requests, bytes
+    log_signal   = pyqtSignal(str, str)
+    stats_signal = pyqtSignal(int, int)
 
 
 stats_emitter = _Emitter()
 
 
-# ─────────────────────────────────────────────────────────────
-# HTTP request handler
-# ─────────────────────────────────────────────────────────────
 class LoggingHTTPRequestHandler(SimpleHTTPRequestHandler):
     server_version = "NovaServer/2.0"
 
@@ -190,9 +174,6 @@ class LoggingHTTPRequestHandler(SimpleHTTPRequestHandler):
         stats_emitter.log_signal.emit(msg, "error")
 
 
-# ─────────────────────────────────────────────────────────────
-# Server thread
-# ─────────────────────────────────────────────────────────────
 class HttpServerThread(QThread):
     started_signal = pyqtSignal()
     stopped_signal = pyqtSignal()
@@ -239,13 +220,7 @@ class HttpServerThread(QThread):
                 pass
 
 
-# ─────────────────────────────────────────────────────────────
-# Animated button
-# ─────────────────────────────────────────────────────────────
 class StyledButton(QPushButton):
-    """Pill-shaped button with smooth color-fade on hover."""
-
-    # variant: "primary" | "danger" | "ghost" | "outline" | "success"
     VARIANTS = {
         "primary": (C["accent"],      C["accent_dark"], C["text_inv"]),
         "danger":  (C["danger"],      C["danger_dark"], C["text_inv"]),
@@ -260,12 +235,10 @@ class StyledButton(QPushButton):
         self.icon_text = icon_text
         self._variant = variant
         self._base, self._hover, self._fg = self.VARIANTS.get(variant, self.VARIANTS["primary"])
-
         self._color = QColor(self._base)
         self._anim = QPropertyAnimation(self, b"_btn_color")
         self._anim.setDuration(200)
         self._anim.setEasingCurve(QEasingCurve.InOutSine)
-
         self.setMinimumHeight(38)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.setFont(QFont("Segoe UI", 10, QFont.DemiBold))
@@ -323,14 +296,10 @@ class StyledButton(QPushButton):
         self._refresh_style(self._color)
 
     def set_compact(self, h_pad: int = 10):
-        """Reduce horizontal padding — useful for small fixed-size buttons."""
         self._h_pad = h_pad
         self._refresh_style(self._color)
 
 
-# ─────────────────────────────────────────────────────────────
-# Pulsing status dot
-# ─────────────────────────────────────────────────────────────
 class StatusDot(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -372,9 +341,6 @@ class StatusDot(QWidget):
         p.drawEllipse(2, 2, 8, 8)
 
 
-# ─────────────────────────────────────────────────────────────
-# Card frame helper
-# ─────────────────────────────────────────────────────────────
 class Card(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -393,53 +359,72 @@ class Card(QFrame):
 
 
 # ─────────────────────────────────────────────────────────────
-# QR Dialog
+# QR Dialog  ← UPDATED: wider horizontally (520×420)
 # ─────────────────────────────────────────────────────────────
 class QRDialog(QDialog):
     def __init__(self, url: str, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Scan to Connect")
-        self.setFixedSize(520, 400)
+        self.setMinimumSize(380, 460)
+        self.setMaximumSize(420, 500)
+        self.resize(400, 480)
         self.setStyleSheet(f"background: {C['surface']}; color: {C['text']};")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(16)
+        layout.setContentsMargins(28, 24, 28, 24)
+        layout.setSpacing(14)
 
+        # ── Title ──────────────────────────────────────────────
         title = QLabel("Scan QR Code")
         title.setFont(QFont("Segoe UI", 14, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet(f"color: {C['text']}; background: transparent;")
         layout.addWidget(title)
 
-        img = qrcode.make(url, box_size=7, border=2)
+        # ── QR Image ───────────────────────────────────────────
+        img = qrcode.make(url, box_size=8, border=3)
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         buf.seek(0)
-        pix = QPixmap()
-        pix.loadFromData(buf.read(), "PNG")
+        raw_pix = QPixmap()
+        raw_pix.loadFromData(buf.read(), "PNG")
 
         qr_lbl = QLabel()
-        qr_lbl.setPixmap(pix.scaled(420, 360, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         qr_lbl.setAlignment(Qt.AlignCenter)
-        qr_lbl.setStyleSheet("background: white; border-radius: 8px; padding: 8px;")
-        layout.addWidget(qr_lbl)
+        qr_lbl.setStyleSheet(
+            "background: white; border-radius: 10px; padding: 10px;"
+        )
+        qr_lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+        available = self.width() - 56
+        qr_size   = min(available, 260)
+        scaled    = raw_pix.scaled(
+            qr_size, qr_size,
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
+        qr_lbl.setPixmap(scaled)
+        qr_lbl.setFixedSize(qr_size + 20, qr_size + 20)
+        layout.addWidget(qr_lbl, alignment=Qt.AlignHCenter)
+
+        # ── URL Chip ───────────────────────────────────────────
         url_lbl = QLabel(url)
         url_lbl.setFont(QFont("Cascadia Code", 9))
         url_lbl.setAlignment(Qt.AlignCenter)
-        url_lbl.setStyleSheet(f"color: {C['accent_dark']}; background: {C['accent_soft']}; "
-                              f"border-radius: 6px; padding: 6px;")
+        url_lbl.setStyleSheet(
+            f"color: {C['accent_dark']}; background: {C['accent_soft']}; "
+            f"border-radius: 8px; padding: 8px 14px;"
+        )
         url_lbl.setWordWrap(True)
         layout.addWidget(url_lbl)
 
+        # ── Close Button ───────────────────────────────────────
         close_btn = StyledButton("Close", variant="ghost")
+        close_btn.setFixedHeight(40)
         close_btn.clicked.connect(self.accept)
         layout.addWidget(close_btn)
 
 
-# ─────────────────────────────────────────────────────────────
-# Collapsible Settings Sidebar
-# ─────────────────────────────────────────────────────────────
 class SettingsSidebar(QFrame):
     SIDEBAR_W = 300
 
@@ -495,15 +480,11 @@ class SettingsSidebar(QFrame):
             chk.setFont(QFont("Segoe UI", 10))
             layout.addWidget(chk)
 
-        
-
         self.close_btn = StyledButton("← Close", variant="ghost")
         layout.addWidget(self.close_btn)
         layout.addStretch()
 
-# ─────────────────────────────────────────────────────────────
-# URL Chip
-# ─────────────────────────────────────────────────────────────
+
 class URLChip(QFrame):
     def __init__(self, url: str, parent=None):
         super().__init__(parent)
@@ -550,15 +531,12 @@ class URLChip(QFrame):
         super().mousePressEvent(e)
 
 
-# ─────────────────────────────────────────────────────────────
-# Main Window
-# ─────────────────────────────────────────────────────────────
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Nova Server")
         self.resize(1000, 700)
-        self.setMinimumSize(300, 300)   # scroll area absorbs anything smaller
+        self.setMinimumSize(300, 300)
 
         self.server_thread: Optional[HttpServerThread] = None
         self.start_time: Optional[float] = None
@@ -572,14 +550,11 @@ class MainWindow(QWidget):
         self._apply_global_style()
         self.restore_settings()
 
-    # ── UI Construction ──────────────────────────────────────
     def _build_ui(self):
         root = QHBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # ── Scroll area wraps the whole main panel so content NEVER
-        #    overlaps — if the window is too small, it scrolls instead. ──
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QFrame.NoFrame)
@@ -600,7 +575,7 @@ class MainWindow(QWidget):
         ml.setContentsMargins(28, 24, 28, 24)
         ml.setSpacing(16)
 
-        # ── Header ───────────────────────────────────────────
+        # Header
         header_card = QWidget()
         header_card.setMinimumHeight(82)
         header_card.setStyleSheet(f"""
@@ -652,8 +627,7 @@ class MainWindow(QWidget):
         hl.addWidget(self.settings_btn)
         ml.addWidget(header_card)
 
-        # ── Config card (Directory / Port / Bind — each on its own row
-        #    so nothing gets crowded or overlaps) ─────────────────────
+        # Config card
         cfg_card = Card()
         cl = QVBoxLayout(cfg_card)
         cl.setContentsMargins(22, 20, 22, 20)
@@ -668,7 +642,6 @@ class MainWindow(QWidget):
             lbl.setFixedWidth(LABEL_W)
             return lbl
 
-        # Row 1: Directory
         dir_row = QHBoxLayout()
         dir_row.setSpacing(10)
         self.dir_edit = self._make_lineedit("Select a folder to serve…")
@@ -681,7 +654,6 @@ class MainWindow(QWidget):
         dir_row.addWidget(self.dir_btn)
         cl.addLayout(dir_row)
 
-        # Row 2: Port
         port_row = QHBoxLayout()
         port_row.setSpacing(10)
         self.port_spin = QSpinBox()
@@ -697,7 +669,6 @@ class MainWindow(QWidget):
         port_row.addStretch(1)
         cl.addLayout(port_row)
 
-        # Row 3: Bind
         bind_row = QHBoxLayout()
         bind_row.setSpacing(10)
         self.host_combo = QComboBox()
@@ -714,7 +685,7 @@ class MainWindow(QWidget):
 
         ml.addWidget(cfg_card)
 
-        # ── Action buttons ───────────────────────────────────
+        # Action buttons
         action_row = QHBoxLayout()
         action_row.setSpacing(10)
         self.start_btn   = StyledButton("▶  Start Server", variant="primary")
@@ -735,7 +706,7 @@ class MainWindow(QWidget):
         action_row.addStretch()
         ml.addLayout(action_row)
 
-        # ── URLs card ────────────────────────────────────────
+        # URLs card
         urls_card = Card()
         ul = QVBoxLayout(urls_card)
         ul.setContentsMargins(20, 16, 20, 16)
@@ -754,7 +725,7 @@ class MainWindow(QWidget):
         ul.addWidget(self.urls_panel)
         ml.addWidget(urls_card)
 
-        # ── Stats row ────────────────────────────────────────
+        # Stats row
         stats_card = Card()
         sl = QHBoxLayout(stats_card)
         sl.setContentsMargins(20, 16, 20, 16)
@@ -791,7 +762,7 @@ class MainWindow(QWidget):
 
         ml.addWidget(stats_card)
 
-        # ── Log panel ────────────────────────────────────────
+        # Log panel
         log_card = Card()
         log_card.setMinimumHeight(220)
         ll = QVBoxLayout(log_card)
@@ -859,21 +830,17 @@ class MainWindow(QWidget):
 
         self.scroll.setWidget(self.main_panel)
 
-        # ── Settings sidebar ─────────────────────────────────
         self.sidebar = SettingsSidebar()
 
-        # ── Root layout ──────────────────────────────────────
         root.addWidget(self.scroll, 1)
         root.addWidget(self.sidebar)
         self.sidebar.setVisible(False)
         self._sidebar_visible = False
 
-        # Timers
         self._uptime_timer = QTimer(self)
         self._uptime_timer.setInterval(1000)
         self._uptime_timer.timeout.connect(self._tick_uptime)
 
-    # ── Style sheet ──────────────────────────────────────────
     def _apply_global_style(self):
         self.setStyleSheet(f"""
             QWidget {{
@@ -917,7 +884,6 @@ class MainWindow(QWidget):
             QScrollArea {{ border: none; background: transparent; }}
         """)
 
-    # ── Helpers ──────────────────────────────────────────────
     def _make_lineedit(self, placeholder=""):
         le = QLineEdit()
         le.setPlaceholderText(placeholder)
@@ -953,7 +919,6 @@ class MainWindow(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
-    # ── Signal wiring ────────────────────────────────────────
     def _connect_signals(self):
         self.dir_btn.clicked.connect(self._browse_dir)
         self.auto_port_btn.clicked.connect(self._auto_port)
@@ -972,7 +937,6 @@ class MainWindow(QWidget):
         stats_emitter.log_signal.connect(self._on_log)
         stats_emitter.stats_signal.connect(self._on_stats)
 
-    # ── Actions ──────────────────────────────────────────────
     def _browse_dir(self):
         d = QFileDialog.getExistingDirectory(self, "Select Folder to Serve",
                                              self.dir_edit.text() or os.getcwd())
@@ -1045,7 +1009,6 @@ class MainWindow(QWidget):
         dlg  = QRDialog(url, self)
         dlg.exec_()
 
-    # ── Server event handlers ────────────────────────────────
     def _on_server_started(self):
         self.start_time = time.time()
         self._uptime_timer.start()
@@ -1089,7 +1052,6 @@ class MainWindow(QWidget):
         self.restart_btn.setEnabled(False)
         self.server_thread = None
 
-    # ── URL display ──────────────────────────────────────────
     def _update_urls(self):
         self._clear_urls()
         port = self.port_spin.value()
@@ -1104,7 +1066,6 @@ class MainWindow(QWidget):
             chip = URLChip(url)
             self.urls_layout.addWidget(chip)
 
-    # ── Logging ──────────────────────────────────────────────
     def _log_line(self, text: str, level: str = "info"):
         ts = time.strftime("%H:%M:%S")
         line = f"[{ts}] {text}"
@@ -1158,7 +1119,6 @@ class MainWindow(QWidget):
         except re.error:
             return filt.lower() in line.lower()
 
-    # ── Uptime tick ──────────────────────────────────────────
     def _tick_uptime(self):
         if not self.start_time:
             return
@@ -1167,12 +1127,10 @@ class MainWindow(QWidget):
         m, s   = divmod(rem, 60)
         self.uptime_val.setText(f"{h:02d}:{m:02d}:{s:02d}")
 
-    # ── Sidebar toggle ───────────────────────────────────────
     def _toggle_sidebar(self):
         self._sidebar_visible = not self._sidebar_visible
         self.sidebar.setVisible(self._sidebar_visible)
 
-    # ── Helpers ──────────────────────────────────────────────
     def _human_size(self, num: float) -> str:
         for unit in ["B", "KB", "MB", "GB", "TB"]:
             if num < 1024:
@@ -1180,7 +1138,6 @@ class MainWindow(QWidget):
             num /= 1024
         return f"{num:.1f} PB"
 
-    # ── Persistence ──────────────────────────────────────────
     def _save_settings(self):
         self.settings.setValue("port",         self.port_spin.value())
         self.settings.setValue("remember_dir", self.sidebar.remember_dir_chk.isChecked())
@@ -1201,7 +1158,6 @@ class MainWindow(QWidget):
         if self.sidebar.autostart_chk.isChecked():
             QTimer.singleShot(400, self.start_server)
 
-    # ── Window close ─────────────────────────────────────────
     def closeEvent(self, e):
         if self.server_thread and self.server_thread.isRunning():
             ans = QMessageBox.question(
@@ -1225,9 +1181,6 @@ class MainWindow(QWidget):
         super().closeEvent(e)
 
 
-# ─────────────────────────────────────────────────────────────
-# Entry point
-# ─────────────────────────────────────────────────────────────
 def main():
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
@@ -1252,6 +1205,6 @@ def main():
     w.show()
     sys.exit(app.exec_())
 
-##
+
 if __name__ == "__main__":
     main()
